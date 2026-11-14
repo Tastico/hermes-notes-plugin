@@ -1,0 +1,12 @@
+{
+  "name": "notes",
+  "label": "Notes",
+  "description": "Nextcloud Notes: read, write and search the /Notes folder from Hermes. The UI ships as a desktop plugin (desktop/plugin.js); this manifest declares the backend router only, so the browser dashboard adds no extra nav row.",
+  "icon": "Notebook",
+  "version": "1.0.0",
+  "tab": {
+    "path": "/notes",
+    "hidden": true
+  },
+  "api": "plugin_api.py"
+}

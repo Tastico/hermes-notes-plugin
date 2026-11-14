@@ -1,0 +1,27 @@
+name: notes
+version: "1.1.0"
+kind: standalone
+description: >
+  Nextcloud Notes for Hermes: a /notes desktop page (list, search, category
+  filter, editor with per-note unsaved drafts, favourites, delete) on top of a
+  thin gateway-side proxy to the Nextcloud Notes REST API. Notes stay plain
+  markdown files under /Notes in the Nextcloud account, so the phone app and the
+  web app see the same content. No API key is shipped and none reaches the
+  renderer: the app password lives outside the repo and only the backend reads it.
+author: Tiago AlTabaa
+license: MIT
+requires_hermes: ">=0.22.6"
+tags: [desktop, notes, nextcloud]
+optional_env:
+  - name: NC_NOTES_URL
+    description: "Nextcloud base URL (default http://localhost:8082, the Nextcloud docker default)."
+    prompt: "e.g. https://cloud.example.com"
+    password: false
+  - name: NC_NOTES_USER
+    description: "Nextcloud login the app password belongs to. Required unless notes-config.json sets it."
+    prompt: "e.g. tiago"
+    password: false
+  - name: NC_NOTES_TOKEN
+    description: "App password override. When unset, the backend reads token_file (default ~/.hermes/credentials/nextcloud-notes-app-password.txt)."
+    prompt: "Paste an app password, or leave empty to use the credentials file."
+    password: true
