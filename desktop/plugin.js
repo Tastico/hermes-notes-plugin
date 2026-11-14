@@ -12,7 +12,7 @@
  * backend (409) and surfaced as a reload prompt instead of a silent overwrite.
  */
 
-import { ROUTES_AREA, SIDEBAR_NAV_AREA } from '@hermes/plugin-sdk'
+import { host, ROUTES_AREA, SIDEBAR_NAV_AREA } from '@hermes/plugin-sdk'
 import { createElement as h, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 const PAGE_PATH = '/notes'
@@ -30,23 +30,23 @@ function ensureStyles() {
   el.setAttribute('data-notes-plugin', '1')
   el.textContent = `
     .nc-page { display: flex; flex-direction: column; height: 100%; min-height: 0;
-      color: var(--ui-text-primary); background: var(--ui-bg-primary); font-size: 13px; }
+      color: var(--ui-text-primary); background: transparent; font-size: 13px; }
     .nc-bar { display: flex; align-items: center; gap: 8px; flex: 0 0 auto;
       padding: 8px 12px; border-bottom: 1px solid var(--ui-stroke-secondary);
-      background: var(--ui-bg-chrome); }
+      background: transparent; }
     .nc-bar__title { font-size: 13px; font-weight: 650; letter-spacing: 0.01em; }
     .nc-chip { font-size: 11px; color: var(--ui-text-tertiary);
       border: 1px solid var(--ui-stroke-secondary); border-radius: 999px; padding: 1px 8px; }
     .nc-search { flex: 1 1 auto; min-width: 120px; max-width: 420px; }
-    .nc-input, .nc-select { background: var(--ui-bg-input); color: inherit;
-      border: 1px solid var(--ui-stroke-secondary); border-radius: 6px;
+    .nc-input, .nc-select { background: color-mix(in srgb, var(--ui-text-primary) 6%, transparent);
+      color: inherit; border: 1px solid var(--ui-stroke-secondary); border-radius: 6px;
       padding: 4px 8px; font-size: 12px; font-family: inherit; outline: none; }
     .nc-input:focus, .nc-select:focus { border-color: var(--ui-accent); }
     .nc-btn { display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
       background: transparent; color: var(--ui-text-primary);
       border: 1px solid var(--ui-stroke-secondary); border-radius: 6px;
       padding: 4px 10px; font-size: 12px; font-family: inherit; }
-    .nc-btn:hover { background: var(--ui-control-hover-background); }
+    .nc-btn:hover { background: color-mix(in srgb, var(--ui-text-primary) 8%, transparent); }
     .nc-btn:disabled { opacity: 0.45; cursor: default; }
     .nc-btn--primary { background: var(--ui-accent); color: var(--ui-accent-foreground, #fff);
       border-color: transparent; font-weight: 600; }
@@ -54,13 +54,13 @@ function ensureStyles() {
     .nc-body { display: flex; flex: 1 1 auto; min-height: 0; }
     .nc-list { display: flex; flex-direction: column; width: 304px; min-width: 200px;
       min-height: 0; border-right: 1px solid var(--ui-stroke-secondary);
-      background: var(--ui-bg-secondary); }
+      background: color-mix(in srgb, var(--ui-text-primary) 4%, transparent); }
     .nc-list__scroll { flex: 1 1 auto; overflow-y: auto; min-height: 0; }
     .nc-row { display: block; width: 100%; text-align: left; cursor: pointer;
       border: 0; border-bottom: 1px solid var(--ui-stroke-secondary);
       background: transparent; color: inherit; font-family: inherit; padding: 8px 10px 7px; }
-    .nc-row:hover { background: var(--ui-row-hover-background); }
-    .nc-row--active { background: var(--ui-row-active-background);
+    .nc-row:hover { background: color-mix(in srgb, var(--ui-text-primary) 7%, transparent); }
+    .nc-row--active { background: color-mix(in srgb, var(--ui-text-primary) 10%, transparent);
       box-shadow: inset 2px 0 0 var(--ui-accent); }
     .nc-row__head { display: flex; align-items: baseline; gap: 6px; }
     .nc-row__title { flex: 1 1 auto; font-size: 12.5px; font-weight: 600;
@@ -75,7 +75,7 @@ function ensureStyles() {
     .nc-tag { border: 1px solid var(--ui-stroke-secondary); border-radius: 4px;
       padding: 0 4px; font-size: 10px; }
     .nc-editor { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0;
-      min-height: 0; background: var(--ui-bg-primary); }
+      min-height: 0; background: transparent; }
     .nc-editor__head { display: flex; align-items: center; gap: 8px; flex: 0 0 auto;
       padding: 10px 14px 6px; }
     .nc-title-input { flex: 1 1 auto; min-width: 0; background: transparent;
@@ -88,7 +88,7 @@ function ensureStyles() {
       font-size: 13px; line-height: 1.65; padding: 4px 14px 14px; }
     .nc-foot { display: flex; align-items: center; gap: 8px; flex: 0 0 auto;
       padding: 7px 14px; border-top: 1px solid var(--ui-stroke-secondary);
-      background: var(--ui-bg-chrome); font-size: 11px; color: var(--ui-text-tertiary); }
+      background: transparent; font-size: 11px; color: var(--ui-text-tertiary); }
     .nc-foot__spacer { flex: 1 1 auto; }
     .nc-hint { color: var(--ui-text-tertiary); font-size: 11px; }
     .nc-empty { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center;
@@ -99,6 +99,20 @@ function ensureStyles() {
     .nc-star { border: 0; background: transparent; cursor: pointer; font-size: 13px;
       line-height: 1; padding: 2px; color: var(--ui-text-tertiary); }
     .nc-star--on { color: var(--ui-orange); }
+    /* The side-rail pane: same tokens, tighter spacing. */
+    .nc-rail { display: flex; flex-direction: column; height: 100%; min-height: 0;
+      background: transparent; color: var(--ui-text-primary); font-size: 12.5px; }
+    .nc-rail__head { display: flex; align-items: center; gap: 6px; padding: 8px 10px;
+      border-bottom: 1px solid var(--ui-stroke-secondary); flex: 0 0 auto; }
+    .nc-rail__title { flex: 1 1 auto; min-width: 0; background: transparent; border: 0;
+      outline: none; color: inherit; font-family: inherit; font-size: 13px; font-weight: 600; }
+    .nc-rail__body { flex: 1 1 auto; min-height: 0; resize: none; border: 0; outline: none;
+      background: transparent; color: inherit; font-family: inherit; font-size: 12.5px;
+      line-height: 1.6; padding: 8px 10px; }
+    .nc-rail__foot { display: flex; align-items: center; gap: 6px; padding: 6px 10px;
+      border-top: 1px solid var(--ui-stroke-secondary); font-size: 11px;
+      color: var(--ui-text-tertiary); flex: 0 0 auto; }
+    .nc-rail__spacer { flex: 1 1 auto; }
   `
   document.head.appendChild(el)
 }
@@ -134,6 +148,188 @@ function clockTime(seconds) {
 function errorText(error) {
   const message = error && error.message ? String(error.message) : String(error || 'unknown error')
   return message.length > 240 ? `${message.slice(0, 240)}…` : message
+}
+
+// --- side-rail pane ---------------------------------------------------------
+// One note, docked beside the chat like the terminal pane. The pane is a
+// `panes` contribution at placement 'right'; its contribution-scoped id is
+// `<pluginId>:<paneId>` = 'notes:rail', which is what host.revealPane takes.
+
+const RAIL_PANE_ID = 'notes:rail'
+
+const railState = { id: null, listeners: new Set() }
+
+function setRailNote(id) {
+  railState.id = id
+  for (const listener of railState.listeners) {
+    listener(id)
+  }
+}
+
+function useRailNote() {
+  const [value, setValue] = useState(railState.id)
+  useEffect(() => {
+    const listener = next => setValue(next)
+    railState.listeners.add(listener)
+    return () => railState.listeners.delete(listener)
+  }, [])
+  return value
+}
+
+function showRail(id) {
+  if (id != null) {
+    setRailNote(id)
+  }
+  try {
+    host.undismissPane?.(RAIL_PANE_ID)
+    host.revealPane?.(RAIL_PANE_ID)
+  } catch {
+    /* older desktop: the pane is still opened from the rail's own tab list */
+  }
+}
+
+function NoteRail({ ctx }) {
+  ensureStyles()
+  const railId = useRailNote()
+  const [rows, setRows] = useState([])
+  const [draft, setDraft] = useState(null)
+  const [state, setState] = useState('')
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let alive = true
+    ctx
+      .rest('/notes')
+      .then(data => {
+        if (alive) {
+          setRows(Array.isArray(data.notes) ? data.notes : [])
+        }
+      })
+      .catch(err => {
+        if (alive) {
+          setError(errorText(err))
+        }
+      })
+    return () => {
+      alive = false
+    }
+  }, [ctx])
+
+  useEffect(() => {
+    if (!railId) {
+      setDraft(null)
+      return undefined
+    }
+    let alive = true
+    setError('')
+    setState('')
+    ctx
+      .rest(`/notes/${railId}`)
+      .then(note => {
+        if (alive) {
+          const value = {
+            id: note.id,
+            title: note.title || '',
+            content: note.content || '',
+            modified: note.modified,
+            readonly: Boolean(note.readonly),
+            base: ''
+          }
+          value.base = signature(value)
+          setDraft(value)
+        }
+      })
+      .catch(err => {
+        if (alive) {
+          setError(errorText(err))
+        }
+      })
+    return () => {
+      alive = false
+    }
+  }, [ctx, railId])
+
+  const dirty = Boolean(draft) && signature(draft) !== draft.base
+
+  const save = async () => {
+    if (!draft || draft.readonly) {
+      return
+    }
+    setState('saving')
+    setError('')
+    try {
+      const note = await ctx.rest(`/notes/${draft.id}`, {
+        method: 'PUT',
+        body: { title: draft.title, content: draft.content, modified: draft.modified }
+      })
+      const value = {
+        id: note.id,
+        title: note.title || '',
+        content: note.content || '',
+        modified: note.modified,
+        readonly: Boolean(note.readonly),
+        base: ''
+      }
+      value.base = signature(value)
+      setDraft(value)
+      setState('saved')
+    } catch (err) {
+      setState('error')
+      setError(errorText(err))
+    }
+  }
+
+  return h(
+    'div',
+    { className: 'nc-rail' },
+    h(
+      'div',
+      { className: 'nc-rail__head' },
+      h(
+        'select',
+        {
+          className: 'nc-select',
+          style: { maxWidth: '150px' },
+          value: draft ? draft.id : '',
+          onChange: event => showRail(Number(event.target.value))
+        },
+        h('option', { value: '' }, 'Pick a note'),
+        rows.map(row => h('option', { key: row.id, value: row.id }, row.title))
+      ),
+      h('input', {
+        className: 'nc-rail__title',
+        value: draft ? draft.title : '',
+        placeholder: 'No note pinned',
+        readOnly: !draft || draft.readonly,
+        onChange: event => setDraft(current => (current ? { ...current, title: event.target.value } : current))
+      })
+    ),
+    error ? h('div', { className: 'nc-error' }, error) : null,
+    h('textarea', {
+      className: 'nc-rail__body',
+      value: draft ? draft.content : '',
+      readOnly: !draft || draft.readonly,
+      placeholder: 'Pin a note here from the Notes page.',
+      onChange: event => setDraft(current => (current ? { ...current, content: event.target.value } : current))
+    }),
+    h(
+      'div',
+      { className: 'nc-rail__foot' },
+      h('span', null, state === 'saving' ? 'Saving…' : dirty ? 'Unsaved' : draft ? relTime(draft.modified) : ''),
+      h('span', { className: 'nc-rail__spacer' }),
+      h('button', { type: 'button', className: 'nc-btn', onClick: () => host.navigate(PAGE_PATH) }, 'Notes'),
+      h(
+        'button',
+        {
+          type: 'button',
+          className: 'nc-btn nc-btn--primary',
+          disabled: !draft || !dirty || draft.readonly || state === 'saving',
+          onClick: save
+        },
+        'Save'
+      )
+    )
+  )
 }
 
 function NotesPage({ ctx }) {
@@ -502,6 +698,16 @@ function NotesPage({ ctx }) {
               h('span', { className: 'nc-foot__spacer' }),
               h('span', { className: 'nc-hint' }, 'Ctrl+S to save'),
               dirty ? h('button', { type: 'button', className: 'nc-btn', onClick: discardDraft }, 'Revert') : null,
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'nc-btn',
+                  title: 'Keep this note in the side pane, beside the chat',
+                  onClick: () => showRail(draft.id)
+                },
+                'Side pane'
+              ),
               h('button', { type: 'button', className: 'nc-btn nc-btn--danger', onClick: deleteNote }, 'Delete'),
               h(
                 'button',
@@ -525,7 +731,7 @@ function NotesPage({ ctx }) {
   )
 }
 
-const PNG_ICON = 'notebook'
+const NAV_ICON = 'notebook'
 
 export default {
   id: 'notes',
@@ -544,7 +750,16 @@ export default {
         id: 'nav',
         area: SIDEBAR_NAV_AREA,
         order: 24,
-        data: { path: PAGE_PATH, label: 'Notes', codicon: PNG_ICON }
+        data: { path: PAGE_PATH, label: 'Notes', codicon: NAV_ICON }
+      },
+      {
+        // One note in the right rail, beside the chat, the way the terminal
+        // docks. Contribution-scoped pane id: notes:rail.
+        id: 'rail',
+        area: 'panes',
+        title: 'Note',
+        data: { placement: 'right', minWidth: '20rem' },
+        render: () => h(NoteRail, { ctx })
       }
     ])
   }

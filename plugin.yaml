@@ -1,5 +1,5 @@
 name: notes
-version: "1.1.0"
+version: "1.2.0"
 kind: standalone
 description: >
   Nextcloud Notes for Hermes: a /notes desktop page (list, search, category

@@ -11,6 +11,12 @@ the phone app and Hermes all edit the same content.
 - Save conflicts are refused, not overwritten: the backend compares the mtime the
   edit started from and answers `409` when someone wrote in between.
 - Credentials stay on the backend. The renderer only talks to `/api/plugins/notes`.
+- A **side pane**: `Side pane` in the editor footer pins the open note to the right rail,
+  beside the chat, the way the terminal docks. The rail has its own note picker and Save.
+- **Follows the active theme.** The UI paints no opaque surfaces: backgrounds are translucent
+  mixes of `--ui-text-primary`, borders use `--ui-stroke-secondary`, text and accents use the
+  app's own tokens. (Hermes' `--ui-bg-input` is a hard-coded `#fcfcfc`, so anything built on the
+  `--ui-bg-*` ramp looks white under a user theme; that is why this plugin avoids it.)
 
 ## Requirements
 
