@@ -40,11 +40,15 @@ A Hermes plugin that puts a Nextcloud Notes tab in Hermes Desktop. Two halves:
 ## Verify before claiming done
 
 ```bash
-tools/check
-HERMES_AGENT_SRC=~/hermes-agent tools/check   # adds the real admission lint
-hermes plugins enable notes                    # backend may only be imported when enabled
+tools/check                                   # structure, import allowlist, dashes, ESM parse
+hermes plugins enable notes                   # the backend may only be imported when enabled
 curl -s -H "X-Hermes-Session-Token: $TOKEN" http://127.0.0.1:9119/api/plugins/notes/status
 ```
+
+Release review only: Hermes' own admission lint (needs a hermes-agent checkout)
+is a stronger form of the import check. It is deliberately not wired into the
+gate, because importing it would tie the gate to a private module. Command in
+README, section Development.
 
 A `200` from `/status` with a real `note_count` is the backend proof. The UI
 proof is the tab opening in a real app window; the gate cannot see rendering.

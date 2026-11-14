@@ -1,5 +1,7 @@
 # Notes: a Nextcloud Notes tab for Hermes Desktop
 
+![gate](https://github.com/Tastico/hermes-notes-plugin/actions/workflows/check.yml/badge.svg)
+
 Read, write and search your Nextcloud Notes from inside Hermes. Notes stay plain
 markdown files under `/Notes` in your Nextcloud account, so the Notes web app,
 the phone app and Hermes all edit the same content.
@@ -115,6 +117,34 @@ dashboard/manifest.json     declares the backend router to the dashboard
 dashboard/plugin_api.py     the Notes API proxy (FastAPI router)
 desktop/plugin.js           the /notes page: plain ESM, no build step
 tools/check                 the repo gate (python compile, desktop lint, ESM parse)
+```
+
+## Development
+
+```bash
+tools/check     # the gate: structure, import allowlist, dash style, node ESM parse
+hermes plugins validate .   # the loader's manifest + capability probe
+```
+
+`tools/check` is stdlib plus node only, so it works on a machine with no Hermes
+checkout, and it runs in the pre-commit hook and in CI. The hook itself is not
+committed; recreate it with:
+
+```bash
+printf '#!/usr/bin/env bash\nexec ./tools/check\n' > .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+Release review also runs Hermes' own admission lint, a stronger form of the
+import check that imports a private Hermes module, which is why it is not wired
+into the gate:
+
+```python
+import sys
+sys.path.insert(0, "/path/to/hermes-agent")
+from pathlib import Path
+from hermes_cli.plugin_validate_desktop import desktop_surface_findings
+print(desktop_surface_findings(Path("desktop/plugin.js").read_text()))
 ```
 
 ## License

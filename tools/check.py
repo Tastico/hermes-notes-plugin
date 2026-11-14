@@ -10,21 +10,22 @@ Runs in three tiers so it is useful in both places it has to work:
    - no `eval` / `new Function` / remote-scheme imports in the desktop surface
    - no em dash or en dash anywhere in shipped text (house style)
 2. When node is present: `node --check` the desktop file as ESM.
-3. When the Hermes source is importable (HERMES_AGENT_SRC, or an installed
-   `hermes_cli`): the real admission lint, `plugin_validate_desktop`.
 
-Exit 0 only when every tier that ran is clean. A skipped tier prints `SKIP`,
+Hermes' own admission lint (`hermes_cli.plugin_validate_desktop`) is a stronger
+version of the import check, but importing it would make this gate depend on a
+private module of a moving codebase. Run it by hand during release review, as
+documented in AGENTS.md, instead of wiring it in here.
+
+Exit 0 only when every check that ran is clean. A skipped check prints `SKIP`,
 never a silent pass: the point is that the reader knows what did not run.
 """
 
 from __future__ import annotations
 
 import json
-import os
 import re
 import shutil
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 
@@ -123,29 +124,11 @@ def check_node() -> None:
     ran.append("esm parse")
 
 
-def check_hermes_lint() -> None:
-    source = os.environ.get("HERMES_AGENT_SRC")
-    if source:
-        sys.path.insert(0, source)
-    try:
-        from hermes_cli.plugin_validate_desktop import desktop_surface_findings  # type: ignore
-    except Exception:
-        skipped.append(
-            "hermes admission lint (hermes_cli not importable; set HERMES_AGENT_SRC=<hermes-agent checkout>)"
-        )
-        return
-    findings = desktop_surface_findings((ROOT / "desktop" / "plugin.js").read_text(encoding="utf-8"))
-    for label, line in findings:
-        fail(f"admission lint: {label} (line {line})")
-    ran.append("hermes admission lint")
-
-
 def main() -> int:
     check_structure()
     check_imports()
     check_dashes()
     check_node()
-    check_hermes_lint()
 
     print("ran    : " + ", ".join(ran))
     for note in skipped:
