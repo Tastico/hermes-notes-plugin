@@ -14,6 +14,7 @@ A Hermes plugin that puts a Nextcloud Notes tab in Hermes Desktop. Two halves:
 | `dashboard/plugin_api.py` | the Notes API proxy, config resolution, error mapping | talking to Nextcloud differently |
 | `desktop/plugin.js` | the `/notes` page: sidebar row plus editor | any UI change |
 | `tools/check`, `tools/check.py` | the gate | extending what is validated |
+| `tools/render-check.mjs` | rendering assertions, lifted straight out of `desktop/plugin.js` | changing the Markdown dialect or the title sync |
 | `.github/workflows/check.yml` | CI runs the same gate | never, unless CI itself changes |
 
 ## Hard rules
@@ -34,6 +35,10 @@ A Hermes plugin that puts a Nextcloud Notes tab in Hermes Desktop. Two halves:
   newer server copy answers `409` instead of clobbering. Do not remove that.
 - **House style:** no em or en dashes anywhere (the gate fails them), plain
   sentences, no marketing adjectives.
+- **The preview is escaped by construction.** `renderMarkdown` escapes every
+  character first and only then inserts tags, and links go through `safeLink`
+  (`javascript:`, `data:` and `file:` are dropped). No markdown library, no
+  `innerHTML` from unsanitised text: `tools/render-check.mjs` asserts both.
 - Keep the UI dependency-free. No build step, no bundles, no CSS framework: the
   file is evaluated as-is.
 

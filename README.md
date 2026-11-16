@@ -8,6 +8,9 @@ the phone app and Hermes all edit the same content.
 
 - A `/notes` page plus a sidebar row in Hermes Desktop (and in the browser Webapp).
 - Note list with search, category filter, favourite marker and excerpt.
+- **Markdown, written and rendered.** Write, Split or Preview view, a formatting
+  toolbar with `Ctrl+B` / `Ctrl+I` / `Ctrl+K`, headings, lists and `- [ ]` tasks
+  that can be ticked inside the preview (the tick is a real edit to the file).
 - Editor with per-note unsaved drafts (switching notes never loses an edit),
   explicit Save and `Ctrl/Cmd+S`.
 - Save conflicts are refused, not overwritten: the backend compares the mtime the
@@ -115,14 +118,18 @@ the phone app and Hermes all edit the same content.
 plugin.yaml                 plugin metadata and optional env docs
 dashboard/manifest.json     declares the backend router to the dashboard
 dashboard/plugin_api.py     the Notes API proxy (FastAPI router)
-desktop/plugin.js           the /notes page: plain ESM, no build step
-tools/check                 the repo gate (python compile, desktop lint, ESM parse)
+desktop/plugin.js           the /notes page: plain ESM, no build step, includes
+                            the Markdown renderer and the title/first-line sync
+tools/check                 the repo gate (structure, import allowlist, dashes,
+                            ESM parse, Markdown rendering)
+tools/render-check.mjs      47 assertions over the renderer and the title helpers
 ```
 
 ## Development
 
 ```bash
-tools/check     # the gate: structure, import allowlist, dash style, node ESM parse
+tools/check     # the gate: structure, import allowlist, dash style, node ESM parse,
+                # markdown rendering (tools/render-check.mjs)
 hermes plugins validate .   # the loader's manifest + capability probe
 ```
 

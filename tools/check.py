@@ -37,8 +37,9 @@ REQUIRED = [
     "dashboard/manifest.json",
     "dashboard/plugin_api.py",
     "desktop/plugin.js",
+    "tools/render-check.mjs",
 ]
-TEXT_SUFFIXES = {".md", ".yaml", ".yml", ".json", ".py", ".js", ".sh", ""}
+TEXT_SUFFIXES = {".md", ".yaml", ".yml", ".json", ".py", ".js", ".mjs", ".sh", ""}
 ALLOWED_IMPORT = re.compile(r"^(@hermes/plugin-sdk|react)(/[\w./-]+)?$")
 IMPORT_RE = re.compile(r"(?:^|\n)\s*import\s+(?:[^'\"]*?from\s*)?['\"]([^'\"]+)['\"]")
 FORBIDDEN = (
@@ -124,11 +125,29 @@ def check_node() -> None:
     ran.append("esm parse")
 
 
+def check_render() -> None:
+    """Exercise the markdown renderer and the title helpers in node."""
+    node = shutil.which("node")
+    if not node:
+        skipped.append("render checks (node not installed)")
+        return
+    result = subprocess.run(
+        [node, str(ROOT / "tools" / "render-check.mjs")],
+        capture_output=True,
+        text=True,
+        cwd=str(ROOT),
+    )
+    if result.returncode != 0:
+        fail("render checks failed:\n" + (result.stderr or result.stdout).strip())
+    ran.append("markdown rendering")
+
+
 def main() -> int:
     check_structure()
     check_imports()
     check_dashes()
     check_node()
+    check_render()
 
     print("ran    : " + ", ".join(ran))
     for note in skipped:

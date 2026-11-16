@@ -3,6 +3,33 @@
 All notable changes to this plugin. Versions follow the `version` field in
 `plugin.yaml`, which is what Hermes shows in Capabilities, Plugins.
 
+## 1.3.0
+
+- **Markdown.** Nextcloud stores notes as Markdown and the tab used to show a
+  plain textarea, so a note opened in Hermes lost its formatting. The editor now
+  has Write, Split and Preview (default Split on a wide window, Write on a
+  narrow one, remembered per device), rendered by an in-file renderer for the
+  dialect the Notes app writes: `#` headings, bold, italic, strikethrough,
+  inline and fenced code, nested bullet and numbered lists, `- [ ]` tasks,
+  quotes, rules, pipe tables, links, images and bare URLs.
+- **Ticking a task is an edit.** A checkbox clicked in the preview rewrites that
+  source line, so the tick lands on the phone and in the web app too.
+- **Formatting toolbar and shortcuts.** Headings, bold, italic, strikethrough,
+  code, lists, checklist, quote, code block and link, plus Ctrl+B, Ctrl+I,
+  Ctrl+K. Enter continues a list or a task. Everything edits the draft, never
+  the server, so it saves with the note.
+- **Title and first line stay in step.** The Notes API keeps the title beside
+  the file and does not sync it with the `# heading` in the body; the two could
+  drift until a note was named one thing and said another. Renaming in the title
+  field now rewrites the first heading, and editing the first heading renames
+  the note, as the Nextcloud web editor does.
+- **The side rail renders too**: a Preview toggle on the pinned note, with the
+  same checkbox editing.
+- **Narrow windows** stack: the note list goes above the editor and Split stacks
+  the panes, so the tab stays usable on a small window.
+- New gate tier `tools/render-check.mjs`: 47 assertions over the renderer and
+  the title helpers, run by `tools/check` wherever node exists.
+
 ## 1.2.0
 
 - Surfaces now follow the active theme. The page used to paint `var(--ui-bg-primary)`
