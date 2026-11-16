@@ -29,7 +29,7 @@ if (from < 0 || to < 0 || to <= from) {
   process.exit(1)
 }
 
-const EXPORTS = ['escapeHtml', 'safeLink', 'renderInline', 'renderMarkdown', 'firstHeading', 'setTitleLine', 'withTitleTouched']
+const EXPORTS = ['escapeHtml', 'safeLink', 'renderInline', 'renderMarkdown', 'toggleTaskLine', 'firstHeading', 'setTitleLine', 'withTitleTouched']
 const slice = `${source.slice(from, to)}\nexport { ${EXPORTS.join(', ')} }\n`
 
 const dir = mkdtempSync(join(tmpdir(), 'notes-render-'))
@@ -50,7 +50,7 @@ const has = (needle) => (text) => text.includes(needle)
 const lacks = (needle) => (text) => !text.includes(needle)
 const all = (...tests) => (text) => tests.every((test) => test(text))
 
-const { renderMarkdown, renderInline, firstHeading, setTitleLine, withTitleTouched, safeLink } = mod
+const { renderMarkdown, renderInline, firstHeading, setTitleLine, withTitleTouched, safeLink, toggleTaskLine } = mod
 
 // --- blocks ----------------------------------------------------------------
 check('heading', renderMarkdown('# Title\n\ntext'), all(has('<h1>Title</h1>'), has('<p>text</p>')))
@@ -114,6 +114,23 @@ check('data: link is dropped', renderInline('[x](data:text/html,hi)'), lacks('da
 check('safeLink keeps http', safeLink('https://example.com'), 'https://example.com')
 check('safeLink keeps anchors', safeLink('#section'), '#section')
 check('safeLink drops file:', safeLink('file:///etc/passwd'), '')
+
+// --- ticking a task --------------------------------------------------------
+const taskNote = '- [ ] first item\n- [x] second item\nplain row'
+check('tick turns a task on', toggleTaskLine(taskNote, 0), '- [x] first item\n- [x] second item\nplain row')
+check('tick turns a task off', toggleTaskLine(taskNote, 1), '- [ ] first item\n- [ ] second item\nplain row')
+check('tick keeps the rest of the line', toggleTaskLine('- [ ] a **bold** item with a tail', 0), '- [x] a **bold** item with a tail')
+check('tick keeps nested indentation', toggleTaskLine('  - [ ] nested', 0), '  - [x] nested')
+check('tick accepts a capital X', toggleTaskLine('- [X] done', 0), '- [ ] done')
+check('tick refuses a non-task row', toggleTaskLine(taskNote, 2), null)
+check('tick refuses an out of range index', toggleTaskLine(taskNote, 9), null)
+check('tick keeps the line count', toggleTaskLine(taskNote, 0).split('\n').length, 3)
+check('tick on every task of the sample', (() => {
+  let content = '- [ ] a\n- [ ] b'
+  content = toggleTaskLine(content, 0)
+  content = toggleTaskLine(content, 1)
+  return content === '- [x] a\n- [x] b'
+})(), true)
 
 // --- title and first line --------------------------------------------------
 check('first heading', firstHeading('# My note\n\nbody'), 'My note')

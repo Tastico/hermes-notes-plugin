@@ -467,6 +467,21 @@ function renderMarkdown(source) {
   return html.join('\n')
 }
 
+// Ticking a checkbox in the preview has to be a real edit of one source line.
+// Returns null when that line is not a task, so callers can no-op without
+// guessing: the index comes from a rendered string, not from the draft.
+
+function toggleTaskLine(content, lineIndex) {
+  const rows = String(content || '').replace(/\r\n?/g, '\n').split('\n')
+  const row = rows[lineIndex]
+  const match = row == null ? null : row.match(/^(\s*(?:[-*+]|\d{1,9}[.)])\s+\[)([ xX])(\]\s?)(.*)$/)
+  if (!match) {
+    return null
+  }
+  rows[lineIndex] = `${match[1]}${match[2] === ' ' ? 'x' : ' '}${match[3]}${match[4]}`
+  return rows.join('\n')
+}
+
 // --- title and first line ---------------------------------------------------
 // Nextcloud keeps the note title beside the file, and its own editor keeps the
 // first `# heading` in step with it. Two surfaces that disagree produce a note
@@ -684,14 +699,8 @@ function NoteRail({ ctx }) {
               if (!current || current.readonly || Number.isNaN(lineIndex)) {
                 return current
               }
-              const rows = current.content.replace(/\r\n?/g, '\n').split('\n')
-              const row = rows[lineIndex]
-              const match = row == null ? null : row.match(/^(\s*(?:[-*+]|\d{1,9}[.)])\s+\[)([ xX])(\])/)
-              if (!match) {
-                return current
-              }
-              rows[lineIndex] = `${match[1]}${match[2] === ' ' ? 'x' : ' '}${match[3]}`
-              return { ...current, content: rows.join('\n') }
+              const next = toggleTaskLine(current.content, lineIndex)
+              return next === null ? current : { ...current, content: next }
             })
           },
           dangerouslySetInnerHTML: {
@@ -1029,14 +1038,11 @@ function NotesPage({ ctx }) {
       if (!current || current.readonly || Number.isNaN(lineIndex)) {
         return
       }
-      const rows = current.content.replace(/\r\n?/g, '\n').split('\n')
-      const row = rows[lineIndex]
-      const match = row == null ? null : row.match(/^(\s*(?:[-*+]|\d{1,9}[.)])\s+\[)([ xX])(\])/)
-      if (!match) {
+      const next = toggleTaskLine(current.content, lineIndex)
+      if (next === null) {
         return
       }
-      rows[lineIndex] = `${match[1]}${match[2] === ' ' ? 'x' : ' '}${match[3]}`
-      patchDraft({ content: rows.join('\n') })
+      patchDraft({ content: next })
     },
     [patchDraft]
   )
@@ -1158,7 +1164,7 @@ function NotesPage({ ctx }) {
         className: 'nc-tool',
         title,
         style: style || null,
-        disabled: !draft || draft.readonly,
+        disabled: !draft || draft.readonly || viewMode === 'preview',
         // Keep the caret where it is: a toolbar click must not blur the body.
         onMouseDown: event => event.preventDefault(),
         onClick: run

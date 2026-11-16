@@ -27,8 +27,8 @@ All notable changes to this plugin. Versions follow the `version` field in
   same checkbox editing.
 - **Narrow windows** stack: the note list goes above the editor and Split stacks
   the panes, so the tab stays usable on a small window.
-- New gate tier `tools/render-check.mjs`: 47 assertions over the renderer and
-  the title helpers, run by `tools/check` wherever node exists.
+- New gate tier `tools/render-check.mjs`: 56 assertions over the renderer, the
+  task toggle and the title helpers, run by `tools/check` wherever node exists.
 
 ## 1.2.0
 

@@ -122,7 +122,8 @@ desktop/plugin.js           the /notes page: plain ESM, no build step, includes
                             the Markdown renderer and the title/first-line sync
 tools/check                 the repo gate (structure, import allowlist, dashes,
                             ESM parse, Markdown rendering)
-tools/render-check.mjs      47 assertions over the renderer and the title helpers
+tools/render-check.mjs      56 assertions over the renderer, the task toggle and
+                            the title helpers
 ```
 
 ## Development
